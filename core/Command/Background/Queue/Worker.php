@@ -1,15 +1,16 @@
 <?php
 
-namespace OC\Core\Command\Background;
+namespace OC\Core\Command\Background\Queue;
 
 use OC\Console\CommandLogger;
+use OC\Core\Command\Base;
 use OCP\ILogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Worker extends Command {
+class Worker extends Base {
 
 	/** @var \OCP\BackgroundJob\IJobList */
 	private $jobList;
@@ -23,7 +24,7 @@ class Worker extends Command {
 
 	protected function configure() {
 		$this
-			->setName("background:worker")
+			->setName("background:queue:worker")
 			->setDescription("Listen to the background job queue and execute the jobs")
 			->addOption('sleep', null, InputOption::VALUE_OPTIONAL, 'Number of seconds to sleep when no job is available', 3);
 	}
@@ -35,8 +36,11 @@ class Worker extends Command {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$this->logger = new CommandLogger($output);
 
-		$waitTime = $input->getOption('sleep');
+		$waitTime = max(1, $input->getOption('sleep'));
 		while (true) {
+			if ($this->hasBeenInterrupted()) {
+				break;
+			}
 			if (is_null($this->executeNext())) {
 				sleep($waitTime);
 			}
