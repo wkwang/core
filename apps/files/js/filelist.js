@@ -1694,7 +1694,8 @@
 					encodedPath += '/' + encodeURIComponent(section);
 				}
 			});
-			return OC.linkToRemoteBase('webdav') + encodedPath;
+			var uid = OC.getCurrentUser().uid;
+			return OC.linkToRemoteBase('dav') + '/files/' + uid + encodedPath;
 		},
 
 		/**
