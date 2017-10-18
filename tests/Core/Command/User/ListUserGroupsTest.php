@@ -24,6 +24,8 @@ namespace Tests\Core\Command\User;
 use OC\Core\Command\User\ListUserGroups;
 use Symfony\Component\Console\Tester\CommandTester;
 use Test\TestCase;
+use Test\Traits\GroupTrait;
+use Test\Traits\MembershipTrait;
 use Test\Traits\UserTrait;
 
 /**
@@ -33,6 +35,8 @@ use Test\Traits\UserTrait;
  */
 class ListUserGroupsTest extends TestCase {
     use UserTrait;
+	use GroupTrait;
+	use MembershipTrait;
 
     /** @var CommandTester */
     private $commandTester;
@@ -43,7 +47,7 @@ class ListUserGroupsTest extends TestCase {
         $command = new ListUserGroups(\OC::$server->getUserManager(), \OC::$server->getGroupManager());
         $this->commandTester = new CommandTester($command);
         $user = $this->createUser('user1');
-        \OC::$server->getGroupManager()->createGroup('testgroup');
+		$this->createGroup('testgroup');
         \OC::$server->getGroupManager()->get('testgroup')->addUser($user);
     }
 
