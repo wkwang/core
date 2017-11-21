@@ -4,6 +4,7 @@ namespace OC\Core\Command\Background\Queue;
 
 use OC\Console\CommandLogger;
 use OCP\BackgroundJob\IJob;
+use OCP\BackgroundJob\IJobList;
 use OCP\ILogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -18,8 +19,8 @@ class Delete extends Command {
 	/** @var \OCP\BackgroundJob\IJobList */
 	private $jobList;
 
-	public function __construct() {
-		$this->jobList = \OC::$server->getJobList();
+	public function __construct(IJobList $jobList) {
+		$this->jobList = $jobList;
 		parent::__construct();
 	}
 
@@ -31,9 +32,10 @@ class Delete extends Command {
 	}
 
 	/**
-	* @param InputInterface $input
-	* @param OutputInterface $output
-	*/
+	 * @param InputInterface $input
+	 * @param OutputInterface $output
+	 * @return void
+	 */
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$id = $input->getArgument('id');
 
