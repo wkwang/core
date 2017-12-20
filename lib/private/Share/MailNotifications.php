@@ -156,6 +156,13 @@ class MailNotifications {
 
 	}
 
+	public function sendLinkShareMail($recipient, $filename, $link, $expiration) {
+		$subject = (string)$this->l->t('%s shared »%s« with you', [$this->senderDisplayName, $filename]);
+		list($htmlBody, $textBody) = $this->createMailBody($filename, $link, $expiration);
+
+		return $this->sendLinkShareMailFromBody($recipient, $subject, $htmlBody, $textBody);
+	}
+
 	/**
 	 * inform recipient about public link share
 	 *
@@ -165,17 +172,16 @@ class MailNotifications {
 	 * @param int $expiration expiration date (timestamp)
 	 * @return string[] $result of failed recipients
 	 */
-	public function sendLinkShareMail($recipient, $filename, $link, $expiration) {
-		$subject = (string)$this->l->t('%s shared »%s« with you', [$this->senderDisplayName, $filename]);
-		list($htmlBody, $textBody) = $this->createMailBody($filename, $link, $expiration);
-
+	public function sendLinkShareMailFromBody($recipient, $subject, $htmlBody, $textBody) {
 		$recipient = str_replace([', ', '; ', ',', ';', ' '], ',', $recipient);
 		$recipients = explode(',', $recipient);
 		try {
 			$message = $this->mailer->createMessage();
 			$message->setSubject($subject);
 			$message->setTo($recipients);
-			$message->setHtmlBody($htmlBody);
+			if ($htmlBody !== null) {
+				$message->setHtmlBody($htmlBody);
+			}
 			$message->setPlainBody($textBody);
 			$message->setFrom([
 				Util::getDefaultEmailAddress('sharing-noreply') =>
@@ -204,7 +210,7 @@ class MailNotifications {
 	 * @param string $prefix prefix of mail template files
 	 * @return array an array of the html mail body and the plain text mail body
 	 */
-	private function createMailBody($filename, $link, $expiration, $prefix = '') {
+	public function createMailBody($filename, $link, $expiration, $prefix = '') {
 		$formattedDate = $expiration ? $this->l->l('date', $expiration) : null;
 
 		$html = new \OC_Template('core', $prefix . 'mail', '');

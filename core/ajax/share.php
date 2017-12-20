@@ -129,6 +129,7 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 				$defaults,
 				\OC::$server->getURLGenerator()
 			);
+
 			$result = $mailNotification->sendInternalShareMail($recipientList, $itemSource, $itemType);
 
 			// if we were able to send to at least one recipient, mark as sent
@@ -163,10 +164,16 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 			$link = (string)$_POST['link'];
 			$file = (string)$_POST['file'];
 			$to_address = (string)$_POST['toaddress'];
+			$emailBody = null;
+			if (isset($_POST['emailBody'])) {
+				$emailBody = trim((string)$_POST['emailBody']);
+			}
+
+			$l10n = \OC::$server->getL10N('lib');
 
 			$mailNotification = new \OC\Share\MailNotifications(
 				\OC::$server->getUserSession()->getUser(),
-				\OC::$server->getL10N('lib'),
+				$l10n,
 				\OC::$server->getMailer(),
 				\OC::$server->getLogger(),
 				$defaults,
@@ -183,7 +190,15 @@ if (isset($_POST['action']) && isset($_POST['itemType']) && isset($_POST['itemSo
 				}
 			}
 
-			$result = $mailNotification->sendLinkShareMail($to_address, $file, $link, $expiration);
+			$subject = (string)$l10n->t('%s shared »%s« with you', [$this->senderDisplayName, $filename]);
+			if ($emailBody === null || $emailBody === '') {
+				list($htmlBody, $textBody) = $mailNotification->createMailBody($file, $link, $expiration);
+			} else {
+				$htmlBody = null;
+				$textBody = strip_tags($emailBody);
+			}
+
+			$result = $mailNotification->sendLinkShareMailFromBody($to_address, $subject, $htmlBody, $textBody);
 			if(empty($result)) {
 				// Get the token from the link
 				$linkParts = explode('/', $link);
