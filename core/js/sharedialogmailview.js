@@ -14,11 +14,12 @@
 	}
 
 	var TEMPLATE =
-			'<form id="emailPrivateLink" class="public-link-modal--item">' +
-			'    <label class="public-link-modal--label" for="emailPrivateLinkField-{{cid}}">{{mailLabel}}</label>' +
-			'    <input id="emailPrivateLinkField-{{cid}}" class="public-link-modal--input emailField" value="{{email}}" placeholder="{{mailPrivatePlaceholder}}" type="email" />' +
-			'</form>'
-		;
+		'<form id="emailPrivateLink" class="emailPrivateLinkForm">' +
+		'    <label class="public-link-modal--label" for="emailPrivateLinkField-{{cid}}">{{mailLabel}}</label>' +
+		'    <input class="public-link-modal--input emailField" id="emailPrivateLinkField-{{cid}}" value="{{email}}" placeholder="{{mailPlaceholder}}" type="email" />' +
+		'    <label class="public-link-modal--label" for="emailBodyPrivateLinkField-{{cid}}">{{mailMessageLabel}}</label>' +
+		'    <textarea class="public-link-modal--input emailBodyField" id="emailBodyPrivateLinkField-{{cid}}" rows="3" placeholder="{{mailBodyPlaceholder}}" style="display:none"></textarea>' +
+		'</form>';
 
 	/**
 	 * @class OCA.Share.ShareDialogMailView
@@ -34,14 +35,41 @@
 		/** @type {string} **/
 		id: 'shareDialogMailView',
 
+		events: {
+			"keyup .emailField": "toggleMailBody",
+			"keydown .emailBodyField": "expandMailBody"
+		},
+
 		/** @type {Function} **/
 		_template: undefined,
 
 		initialize: function(options) {
-			if(!_.isUndefined(options.itemModel)) {
+			if (!_.isUndefined(options.itemModel)) {
 				this.itemModel = options.itemModel;
 			} else {
 				throw 'missing OC.Share.ShareItemModel';
+			}
+		},
+
+		toggleMailBody: function() {
+			var $email = this.$el.find('.emailField');
+			var $emailBody = this.$el.find('.emailBodyField');
+
+			if ($email.val().length > 0 && $emailBody.is(":hidden")) {
+				$emailBody.slideDown();
+				console.log("voll");
+			} else if ($email.val().length === 0 && $emailBody.is(":visible")) {
+				$emailBody.slideUp();
+				console.log("leer");
+			}
+		},
+
+		expandMailBody: function(event) {
+			var $emailBody = this.$el.find('.emailBodyField');
+			$emailBody.css('minHeight', $emailBody[0].scrollHeight - 12);
+
+			if (event.keyCode == 13) {
+				event.stopPropagation();
 			}
 		},
 
@@ -50,7 +78,7 @@
 		 *
 		 * @param {string} recipientEmail recipient email address
 		 */
-		_sendEmailPrivateLink: function(recipientEmail) {
+		_sendEmailPrivateLink: function(recipientEmail, emailBody) {
 			var deferred = $.Deferred();
 			var itemType = this.itemModel.get('itemType');
 			var itemSource = this.itemModel.get('itemSource');
@@ -65,6 +93,7 @@
 				OC.generateUrl('core/ajax/share.php'), {
 					action: 'email',
 					toaddress: recipientEmail,
+					emailBody: emailBody,
 					link: this.model.getLink(),
 					itemType: itemType,
 					itemSource: itemSource,
@@ -80,30 +109,38 @@
 						deferred.resolve();
 					}
 			}).fail(function(error) {
-
-				console.log(error);
 				return deferred.reject();
 			});
 
 			return deferred.promise();
 		},
 
-		validateEmail: function (email) {
+		validateEmail: function(email) {
 			return email.match(/([\w\.\-_]+)?\w+@[\w-_]+(\.\w+){1,}$/);
 		},
 
 		sendEmails: function() {
 			var $emailField = this.$el.find('.emailField');
+			var $emailBodyField = this.$el.find('.emailBodyField');
 			var $emailButton = this.$el.find('.emailButton');
 			var email = $emailField.val();
+			var emailBody = $emailBodyField.val().trim();
+
 			if (email !== '') {
 				$emailButton.prop('disabled', true);
-				$emailField
-					.prop('disabled', true)
-					.val(t('core', 'Sending ...'));
-
-				return this._sendEmailPrivateLink(email).done(function() {
-					OC.dialogs.info(t('core', 'Notification was send to {email}', {email: email}), "Success");
+				$emailField.val(t('core', 'Sending ...'));
+				return this._sendEmailPrivateLink(email, emailBody).done(function() {
+					$emailField.css('font-weight', 'bold').val(t('core', 'Email sent'));
+					setTimeout(function() {
+						$emailField.val('');
+						$emailField.css('font-weight', 'normal');
+						$emailField.prop('disabled', false);
+						$emailButton.prop('disabled', false);
+					}, 2000);
+				}).fail(function() {
+					$emailField.val(email);
+					$emailField.css('font-weight', 'normal');
+					$emailField.prop('disabled', false);
 					$emailButton.prop('disabled', false);
 					$emailField
 						.prop('disabled', false)
@@ -122,46 +159,42 @@
 		},
 
 		render: function() {
-			var email = this.$el.find('.emailField').val();
+			var $email = this.$el.find('.emailField');
+			var email = $email.val();
 
 			this.$el.html(this.template({
 				cid: this.cid,
-				mailPrivatePlaceholder: t('core', 'Email link to person'),
+				mailPlaceholder: t('core', 'Email link to person'),
 				mailLabel: t('core', 'Send link via email'),
+				mailBodyPlaceholder: t('core', 'Add personal message'),
 				email: email
 			}));
 
-			var $emailField = this.$el.find('.emailField');
-
-			$emailField.focus(function(){
-				// remove styles attached on error
-				$(this).removeAttr('style')
-			});
-
-			if ($emailField.length !== 0) {
-				$emailField.autocomplete({
-					minLength: 1,
-					source: function (search, response) {
-						$.get(
-							OC.generateUrl('core/ajax/share.php'), {
-								fetch: 'getShareWithEmail',
-								search: search.term
-							}, function(result) {
-								if (result.status == 'success' && result.data.length > 0) {
-									response(result.data);
-								}
-							});
+			if ($email.length !== 0) {
+				$email.autocomplete({
+						minLength: 1,
+						source: function(search, response) {
+							$.get(
+								OC.generateUrl('core/ajax/share.php'), {
+									fetch: 'getShareWithEmail',
+									search: search.term
+								},
+								function(result) {
+									if (result.status == 'success' && result.data.length > 0) {
+										response(result.data);
+									}
+								});
 						},
-					select: function( event, item ) {
-						$emailField.val(item.item.email);
-						return false;
-					}
-				})
-				.data("ui-autocomplete")._renderItem = function( ul, item ) {
-					return $('<li>')
-						.append('<a>' + escapeHTML(item.displayname) + "<br>" + escapeHTML(item.email) + '</a>' )
-						.appendTo( ul );
-				};
+						select: function(event, item) {
+							$email.val(item.item.email);
+							return false;
+						}
+					})
+					.data("ui-autocomplete")._renderItem = function(ul, item) {
+						return $('<li>')
+							.append('<a>' + escapeHTML(item.displayname) + "<br>" + escapeHTML(item.email) + '</a>')
+							.appendTo(ul);
+					};
 			}
 			this.delegateEvents();
 
