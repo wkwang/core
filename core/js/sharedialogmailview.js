@@ -57,10 +57,8 @@
 
 			if ($email.val().length > 0 && $emailBody.is(":hidden")) {
 				$emailBody.slideDown();
-				console.log("voll");
 			} else if ($email.val().length === 0 && $emailBody.is(":visible")) {
 				$emailBody.slideUp();
-				console.log("leer");
 			}
 		},
 
