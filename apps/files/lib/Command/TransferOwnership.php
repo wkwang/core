@@ -302,6 +302,16 @@ class TransferOwnership extends Command {
 					if ($share->getSharedBy() === $this->sourceUser) {
 						$share->setSharedBy($this->destinationUser);
 					}
+					/*
+					 * If the share is already moved then updateShare would cause exception
+					 * This can happen if the folder is shared and file(s) inside the folder
+					 * has shares, for example public link
+					 */
+					if ($share->getShareType() === \OCP\Share::SHARE_TYPE_LINK) {
+						if (strpos($share->getNode()->getPath(), $this->finalTarget) === 1) {
+							continue;
+						}
+					}
 
 					$this->shareManager->updateShare($share);
 				}
