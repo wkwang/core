@@ -62,6 +62,14 @@ class SyncService {
 	}
 
 	/**
+	 * For unit tests
+	 * @param AccountMapper $mapper
+	 */
+	public function setAccountMapper(AccountMapper $mapper) {
+		$this->mapper = $mapper;
+	}
+
+	/**
 	 * @param UserInterface $backend the backend to check
 	 * @param \Closure $callback is called for every user to allow progress display
 	 * @return array

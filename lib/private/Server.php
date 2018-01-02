@@ -1031,6 +1031,14 @@ class Server extends ServerContainer implements IServerContainer, IServiceLoader
 	}
 
 	/**
+	 * @return SyncService
+	 * @throws QueryException
+	 */
+	public function getSyncService() {
+		return $this->query('SyncService');
+	}
+
+	/**
 	 * @return \OC\User\Session
 	 */
 	public function getUserSession() {

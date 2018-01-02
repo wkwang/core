@@ -9,6 +9,7 @@
 namespace Test\Traits;
 
 use OC\User\AccountTermMapper;
+use OC\User\SyncService;
 use OC\User\User;
 use OCP\IConfig;
 use Test\Util\User\Dummy;
@@ -38,10 +39,10 @@ trait UserTrait {
 	}
 
 	protected function setUpUserTrait() {
-
 		$db = \OC::$server->getDatabaseConnection();
 		$config = $this->createMock(IConfig::class);
 		$accountMapper = new MemoryAccountMapper($config, $db, new AccountTermMapper($db));
+		\OC::$server->getSyncService()->setAccountMapper($accountMapper);
 		$accountMapper->testCaseName = get_class($this);
 		$this->previousUserManagerInternals = \OC::$server->getUserManager()
 			->reset($accountMapper, [Dummy::class => new Dummy()]);
