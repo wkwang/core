@@ -82,7 +82,6 @@ pipeline:
     when:
       matrix:
         TEST_SUITE: phpunit
-        ENABLE_COVERAGE: false
 
   codecov:
     image: plugins/codecov:1
