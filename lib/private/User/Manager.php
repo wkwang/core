@@ -105,12 +105,14 @@ class Manager extends PublicEmitter implements IUserManager {
 	 *
 	 * @param AccountMapper $mapper
 	 * @param array $backends
+	 * @param SyncService $syncService
 	 * @return array
 	 */
-	public function reset(AccountMapper $mapper, $backends) {
-		$return = [$this->accountMapper, $this->backends];
+	public function reset(AccountMapper $mapper, $backends, $syncService) {
+		$return = [$this->accountMapper, $this->backends, $this->syncService];
 		$this->accountMapper = $mapper;
 		$this->backends = $backends;
+		$this->syncService = $syncService;
 		$this->cachedUsers->clear();
 
 		return $return;
