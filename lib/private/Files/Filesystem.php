@@ -388,7 +388,7 @@ class Filesystem {
 	 * Initialize system and personal mount points for a user
 	 *
 	 * @param string $user
-	 * @throws \OC\User\NoUserException if the user is not available	
+	 * @throws \OC\User\NoUserException if the user is not available
 	 */
 	public static function initMountPoints($user = '') {
 		if ($user == '') {

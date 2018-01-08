@@ -244,14 +244,11 @@ class Server extends ServerContainer implements IServerContainer, IServiceLoader
 				$c->getConfig(),
 				$c->getLogger(),
 				$c->getAccountMapper(),
-				$c->query('SyncService')
-			);
-		});
-		$this->registerService('SyncService', function(Server $c) {
-			return new SyncService(
-				$c->getConfig(),
-				$c->getLogger(),
-				$c->getAccountMapper()
+				new SyncService(
+					$c->getConfig(),
+					$c->getLogger(),
+					$c->getAccountMapper()
+				)
 			);
 		});
 		$this->registerService('GroupManager', function (Server $c) {
@@ -1028,14 +1025,6 @@ class Server extends ServerContainer implements IServerContainer, IServiceLoader
 	 */
 	public function getGroupManager() {
 		return $this->query('GroupManager');
-	}
-
-	/**
-	 * @return SyncService
-	 * @throws QueryException
-	 */
-	public function getSyncService() {
-		return $this->query('SyncService');
 	}
 
 	/**

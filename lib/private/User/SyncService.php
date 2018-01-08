@@ -183,7 +183,6 @@ class SyncService {
 			$a->setHome($home);
 		}
 
-
 		if ($backend->implementsActions(\OC_User_Backend::GET_DISPLAYNAME)) {
 			//TODO IConsumesDisplayNameBackend for setDisplayName?
 			$a->setDisplayName($backend->getDisplayName($uid));
