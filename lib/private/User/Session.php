@@ -106,6 +106,9 @@ class Session implements IUserSession, Emitter {
 	/** @var IServiceLoader */
 	private $serviceLoader;
 
+	/** @var SyncService */
+	protected $userSyncService;
+
 	/**
 	 * @param IUserManager $manager
 	 * @param ISession $session
@@ -113,16 +116,19 @@ class Session implements IUserSession, Emitter {
 	 * @param IProvider $tokenProvider
 	 * @param IConfig $config
 	 * @param IServiceLoader $serviceLoader
+	 * @param SyncService $userSyncService
 	 */
 	public function __construct(IUserManager $manager, ISession $session,
-								ITimeFactory $timeFactory, $tokenProvider,
-								IConfig $config, IServiceLoader $serviceLoader) {
+								ITimeFactory $timeFactory, IProvider $tokenProvider,
+								IConfig $config, IServiceLoader $serviceLoader,
+								SyncService $userSyncService) {
 		$this->manager = $manager;
 		$this->session = $session;
 		$this->timeFactory = $timeFactory;
 		$this->tokenProvider = $tokenProvider;
 		$this->config = $config;
 		$this->serviceLoader = $serviceLoader;
+		$this->userSyncServce = $userSyncService;
 	}
 
 	/**
@@ -601,10 +607,8 @@ class Session implements IUserSession, Emitter {
 		}
 
 		// Now we try to create the account or sync
-		// TODO inject
-		/** @var SyncService $syncService */
-		$syncService = \OC::$server->query('SyncService');
-		$syncService->createOrSyncAccount($uid, $backend);
+
+		$this->userSyncService->createOrSyncAccount($uid, $backend);
 
 		$user = $this->manager->get($uid);
 		if ($user === false) {

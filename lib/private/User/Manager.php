@@ -364,7 +364,7 @@ class Manager extends PublicEmitter implements IUserManager {
 			try {
 				$account = $this->syncService->createOrSyncAccount($uid, $backend);
 			} catch (\InvalidArgumentException $e) {
-				return null; // because thats what this method shoudl do apparently
+				return null; // because that's what this method should do
 			}
 			$user = $this->getUserObject($account);
 			$this->emit('\OC\User', 'postCreateUser', [$user, $password]);
