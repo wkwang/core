@@ -86,7 +86,7 @@ DELIM
     esac
 }
 
-FILES_EXTERNAL_BACKEND_PATH=../apps/files_external/tests/Storage
+FILES_EXTERNAL_BACKEND_PATH=apps/files_external/tests/Storage
 FILES_EXTERNAL_TEST_TO_RUN=${FILES_EXTERNAL_TYPE}Test.php
 
 
