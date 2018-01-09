@@ -144,7 +144,7 @@ services:
     image: owncloud/server:latest
     when:
       matrix:
-        FILES_EXTERNAL_TYPE: webdav
+        FILES_EXTERNAL_TYPE: Owncloud
 
   oracle:
     image: deepdiver/docker-oracle-xe-11g
@@ -245,5 +245,5 @@ matrix:
     - PHP_VERSION: 7.1
       DB_TYPE: sqlite
       TEST_SUITE: phpunit
-      FILES_EXTERNAL_TYPE: webdav
+      FILES_EXTERNAL_TYPE: Owncloud
       ENABLE_COVERAGE: true
