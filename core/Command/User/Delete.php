@@ -56,16 +56,19 @@ class Delete extends Command {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$user = $this->userManager->get($input->getArgument('uid'));
 		if (is_null($user)) {
-			$output->writeln('<error>User does not exist</error>');
+			$output->writeln("<error>User with uid '$user' does not exist</error>");
 			return 1;
 		}
 
+		$uid = $user->getUID();
+		$displayName = $user->getDisplayName();
+		$email = $user->getEMailAddress();
 		if ($user->delete()) {
-			$output->writeln('<info>The specified user was deleted</info>');
-			return;
+			$output->writeln("<info>User with uid '$uid', display name '$displayName', email '$email' was deleted</info>");
+			return 0;
 		}
 
-		$output->writeln('<error>The specified user could not be deleted. Please check the logs.</error>');
+		$output->writeln("<error>User with uid '$uid', display name '$displayName', email '$email' could not be deleted. Please check the logs.</error>");
 		return 1;
 	}
 }
