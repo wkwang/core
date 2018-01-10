@@ -31,6 +31,9 @@ use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Test\TestCase;
+use OCP\Authentication\IApacheBackend;
+use OCP\UserInterface;
+
 
 /**
  * @group DB
@@ -1021,6 +1024,32 @@ class SessionTest extends TestCase {
 		$this->assertInstanceOf(GenericEvent::class, $calledBeforeLogout[1]);
 		$this->assertArrayHasKey('uid', $calledBeforeLogout[1]);
 		$this->assertEquals('user.beforelogout', $calledBeforeLogout[0]);
+	}
+
+	public function testApacheLogin() {
+		/** @var IUserManager | \PHPUnit_Framework_MockObject_MockObject $userManager */
+		$userManager = $this->createMock(IUserManager::class);
+		/** @var ISession | \PHPUnit_Framework_MockObject_MockObject $session */
+		$session = $this->createMock(ISession::class);
+		/** @var ITimeFactory | \PHPUnit_Framework_MockObject_MockObject $timeFactory */
+		$timeFactory = $this->createMock(ITimeFactory::class);
+		/** @var IProvider | \PHPUnit_Framework_MockObject_MockObject $tokenProvider */
+		$tokenProvider = $this->createMock(IProvider::class);
+		$userSession = new Session($userManager, $session, $timeFactory,
+			$tokenProvider, $this->config, $this->serviceLoader, $this->userSyncService);
+
+		// Fail if not userid returned
+		$apacheBackend = $this->createMock(IApacheBackend::class);
+		$apacheBackend->expects($this->once())->method('getCurrentUserId')->willReturn(null);
+		$loginVal = $userSession->loginWithApache($apacheBackend);
+		$this->assertFalse($loginVal);
+
+		// Fail if not a user interface supplied
+		$apacheBackend = $this->createMock(IApacheBackend::class);
+		$apacheBackend->expects($this->once())->method('getCurrentUserId')->willReturn('userid');
+		$loginVal = $userSession->loginWithApache($apacheBackend);
+		$this->assertFalse($loginVal);
+		
 	}
 
 
