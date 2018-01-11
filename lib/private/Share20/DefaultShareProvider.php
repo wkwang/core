@@ -108,9 +108,11 @@ class DefaultShareProvider implements IShareProvider {
 		if ($share->getShareType() === \OCP\Share::SHARE_TYPE_USER) {
 			//Set the UID of the user we share with
 			$qb->setValue('share_with', $qb->createNamedParameter($share->getSharedWith()));
+			$qb->setValue('accepted', $share->getState());
 		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_GROUP) {
 			//Set the GID of the group we share with
 			$qb->setValue('share_with', $qb->createNamedParameter($share->getSharedWith()));
+			$qb->setValue('accepted', $share->getState());
 		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_LINK) {
 			//Set the token of the share
 			$qb->setValue('token', $qb->createNamedParameter($share->getToken()));
@@ -208,6 +210,7 @@ class DefaultShareProvider implements IShareProvider {
 				->set('permissions', $qb->createNamedParameter($share->getPermissions()))
 				->set('item_source', $qb->createNamedParameter($share->getNode()->getId()))
 				->set('file_source', $qb->createNamedParameter($share->getNode()->getId()))
+				->set('accepted', $qb->createNamedParameter($share->getState()))
 				->execute();
 		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_GROUP) {
 			$qb = $this->dbConn->getQueryBuilder();
@@ -218,6 +221,7 @@ class DefaultShareProvider implements IShareProvider {
 				->set('permissions', $qb->createNamedParameter($share->getPermissions()))
 				->set('item_source', $qb->createNamedParameter($share->getNode()->getId()))
 				->set('file_source', $qb->createNamedParameter($share->getNode()->getId()))
+				->set('accepted', $qb->createNamedParameter($share->getState()))
 				->execute();
 
 			/*
@@ -1000,6 +1004,7 @@ class DefaultShareProvider implements IShareProvider {
 		$share->setNodeId((int)$data['file_source']);
 		$share->setNodeType($data['item_type']);
 		$share->setName($data['share_name']);
+		$share->setState((int)$data['accepted']);
 
 		if ($data['expiration'] !== null) {
 			$expiration = \DateTime::createFromFormat('Y-m-d H:i:s', $data['expiration']);

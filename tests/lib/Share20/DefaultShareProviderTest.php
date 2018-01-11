@@ -97,7 +97,7 @@ class DefaultShareProviderTest extends TestCase {
 	 */
 	private function addShareToDB($shareType, $sharedWith, $sharedBy, $shareOwner,
 			$itemType, $fileSource, $fileTarget, $permissions, $token, $expiration,
-			$parent = null, $name = null) {
+			$parent = null, $name = null, $accepted = 0) {
 		$qb = $this->dbConn->getQueryBuilder();
 		$qb->insert('share');
 
@@ -113,6 +113,7 @@ class DefaultShareProviderTest extends TestCase {
 		if ($expiration) $qb->setValue('expiration', $qb->createNamedParameter($expiration, IQueryBuilder::PARAM_DATE));
 		if ($parent) $qb->setValue('parent', $qb->expr()->literal($parent));
 		if ($name) $qb->setValue('share_name', $qb->expr()->literal($name));
+		if ($accepted) $qb->setValue('accepted', $qb->expr()->literal($accepted));
 
 		$this->assertEquals(1, $qb->execute());
 		return$qb->getLastInsertId();
@@ -297,7 +298,7 @@ class DefaultShareProviderTest extends TestCase {
 	}
 
 	public function testGetShareByIdUserGroupShare() {
-		$id = $this->addShareToDB(Share::SHARE_TYPE_GROUP, 'group0', 'user0', 'user0', 'file', 42, 'myTarget', 31, null, null);
+		$id = $this->addShareToDB(Share::SHARE_TYPE_GROUP, 'group0', 'user0', 'user0', 'file', 42, 'myTarget', 31, null, null, \OCP\Share::STATE_REJECTED);
 		$this->addShareToDB(2, 'user1', 'user0', 'user0', 'file', 42, 'userTarget', 0, null, null, $id);
 
 		$user0 = $this->createMock(IUser::class);
@@ -332,6 +333,7 @@ class DefaultShareProviderTest extends TestCase {
 		$this->assertNull($share->getToken());
 		$this->assertNull($share->getExpirationDate());
 		$this->assertEquals('userTarget', $share->getTarget());
+		$this->assertEquals(\OCP\Share::STATE_REJECTED, $share->getState());
 	}
 
 	public function testGetShareByIdLinkShare() {

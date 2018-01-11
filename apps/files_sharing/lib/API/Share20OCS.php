@@ -150,7 +150,7 @@ class Share20OCS {
 			'expiration' => null,
 			'token' => null,
 			'uid_file_owner' => $share->getShareOwner(),
-			'displayname_file_owner' => $shareOwner !== null ? $shareOwner->getDisplayName() : $share->getShareOwner(),
+			'displayname_file_owner' => $shareOwner !== null ? $shareOwner->getDisplayName() : $share->getShareOwner()
 		];
 
 		$userFolder = $this->rootFolder->getUserFolder($this->currentUser->getUID());
@@ -374,6 +374,8 @@ class Share20OCS {
 			}
 			$share->setSharedWith($shareWith);
 			$share->setPermissions($permissions);
+			// TODO: read global config for auto-accept, else send share notification
+			$share->setState(\OCP\Share::STATE_ACCEPTED);
 		} else if ($shareType === \OCP\Share::SHARE_TYPE_GROUP) {
 			if (!$this->shareManager->allowGroupSharing()) {
 				$share->getNode()->unlock(ILockingProvider::LOCK_SHARED);
@@ -387,6 +389,8 @@ class Share20OCS {
 			}
 			$share->setSharedWith($shareWith);
 			$share->setPermissions($permissions);
+			// TODO: read global config for auto-accept, else send share notification
+			$share->setState(\OCP\Share::STATE_ACCEPTED);
 		} else if ($shareType === \OCP\Share::SHARE_TYPE_LINK) {
 			//Can we even share links?
 			if (!$this->shareManager->shareApiAllowLinks()) {
