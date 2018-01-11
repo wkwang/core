@@ -30,6 +30,7 @@ class OCSShareWrapper {
 			\OC::$server->getShareManager(),
 			\OC::$server->getGroupManager(),
 			\OC::$server->getUserManager(),
+			\OC::$server->getNotificationManager(),
 			\OC::$server->getRequest(),
 			\OC::$server->getRootFolder(),
 			\OC::$server->getURLGenerator(),

@@ -53,6 +53,8 @@ class Share20OCS {
 	private $groupManager;
 	/** @var IUserManager */
 	private $userManager;
+	/** @var \OCP\Notification\IManager */
+	private $notificationManager;
 	/** @var IRequest */
 	private $request;
 	/** @var IRootFolder */
@@ -80,6 +82,7 @@ class Share20OCS {
 	 * @param IManager $shareManager
 	 * @param IGroupManager $groupManager
 	 * @param IUserManager $userManager
+	 * @param \OCP\Notification\IManager $notificationManager
 	 * @param IRequest $request
 	 * @param IRootFolder $rootFolder
 	 * @param IURLGenerator $urlGenerator
@@ -92,6 +95,7 @@ class Share20OCS {
 			IManager $shareManager,
 			IGroupManager $groupManager,
 			IUserManager $userManager,
+			\OCP\Notification\IManager $notificationManager,
 			IRequest $request,
 			IRootFolder $rootFolder,
 			IURLGenerator $urlGenerator,
@@ -103,6 +107,7 @@ class Share20OCS {
 		$this->shareManager = $shareManager;
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
+		$this->notificationManager = $notificationManager;
 		$this->request = $request;
 		$this->rootFolder = $rootFolder;
 		$this->urlGenerator = $urlGenerator;
@@ -366,6 +371,7 @@ class Share20OCS {
 
 		$shareWith = $this->request->getParam('shareWith', null);
 
+		$autoAccept = $this->config->getAppValue('core', 'shareapi_auto_accept_share', 'yes') === 'yes';
 		if ($shareType === \OCP\Share::SHARE_TYPE_USER) {
 			// Valid user is required to share
 			if ($shareWith === null || !$this->userManager->userExists($shareWith)) {
@@ -374,8 +380,11 @@ class Share20OCS {
 			}
 			$share->setSharedWith($shareWith);
 			$share->setPermissions($permissions);
-			// TODO: read global config for auto-accept, else send share notification
-			$share->setState(\OCP\Share::STATE_ACCEPTED);
+			if ($autoAccept) {
+				$share->setState(\OCP\Share::STATE_ACCEPTED);
+			} else {
+				$share->setState(\OCP\Share::STATE_PENDING);
+			}
 		} else if ($shareType === \OCP\Share::SHARE_TYPE_GROUP) {
 			if (!$this->shareManager->allowGroupSharing()) {
 				$share->getNode()->unlock(ILockingProvider::LOCK_SHARED);
@@ -389,8 +398,11 @@ class Share20OCS {
 			}
 			$share->setSharedWith($shareWith);
 			$share->setPermissions($permissions);
-			// TODO: read global config for auto-accept, else send share notification
-			$share->setState(\OCP\Share::STATE_ACCEPTED);
+			if ($autoAccept) {
+				$share->setState(\OCP\Share::STATE_ACCEPTED);
+			} else {
+				$share->setState(\OCP\Share::STATE_PENDING);
+			}
 		} else if ($shareType === \OCP\Share::SHARE_TYPE_LINK) {
 			//Can we even share links?
 			if (!$this->shareManager->shareApiAllowLinks()) {
@@ -492,6 +504,11 @@ class Share20OCS {
 		$event->setArgument('output', $output);
 		$event->setArgument('result', 'success');
 		$this->eventDispatcher->dispatch('share.afterCreate', $event);
+
+		if ($share->getState() === \OCP\Share::STATE_PENDING) {
+			$this->sendNotification($share);
+		}
+
 		return new \OC\OCS\Result($output);
 	}
 
@@ -899,5 +916,49 @@ class Share20OCS {
 		}
 
 		return $share;
+	}
+
+	/**
+	 * Send notification for accepting share
+	 *
+	 * @param IShare $share share
+	 */
+	private function sendNotification(IShare $share) {
+		$users = [];
+		if ($share->getShareType() === \OCP\Share::SHARE_TYPE_GROUP) {
+			// notify all group members
+			$group = $this->groupManager->get($share->getSharedWith());
+			// TODO: scale / chunk / ...
+			$users = array_map(function(IUser $user) {
+				return $user->getUID();
+			}, $group->getUsers());
+		} else if ($share->getShareType() === \OCP\Share::SHARE_TYPE_USER) {
+			$users = [$share->getSharedWith()];
+		}
+
+		foreach ($users as $userId) {
+			$notification = $this->notificationManager->createNotification();
+			$notification->setApp('files_sharing')
+				->setUser($userId)
+				->setDateTime(new \DateTime())
+				->setObject('local_share', $share->getId())
+				->setSubject('local_share', [$share->getShareOwner(), $share->getSharedBy(), $share->getNode()->getName()]);
+
+			$endpointUrl = $this->urlGenerator->getAbsoluteURL(
+				$this->urlGenerator->linkTo('', 'ocs/v1.php/apps/files_sharing/api/v1/local_shares/pending/' . $share->getId())
+			);
+
+			$declineAction = $notification->createAction();
+			$declineAction->setLabel('decline')
+				->setLink($endpointUrl, 'DELETE');
+			$notification->addAction($declineAction);
+
+			$acceptAction = $notification->createAction();
+			$acceptAction->setLabel('accept')
+				->setLink($endpointUrl, 'POST');
+			$notification->addAction($acceptAction);
+
+			$this->notificationManager->notify($notification);
+		}
 	}
 }

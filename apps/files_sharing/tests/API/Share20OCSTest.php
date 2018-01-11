@@ -57,6 +57,9 @@ class Share20OCSTest extends TestCase {
 	/** @var IUserManager | \PHPUnit_Framework_MockObject_MockObject */
 	private $userManager;
 
+	/** @var \OCP\Notification\IManager | \PHPUnit_Framework_MockObject_MockObject */
+	private $notificationManager;
+
 	/** @var IRequest | \PHPUnit_Framework_MockObject_MockObject */
 	private $request;
 
@@ -88,6 +91,7 @@ class Share20OCSTest extends TestCase {
 			->willReturn(true);
 		$this->groupManager = $this->createMock('OCP\IGroupManager');
 		$this->userManager = $this->createMock('OCP\IUserManager');
+		$this->notificationManager = $this->createMock(\OCP\Notification\IManager::class);
 		$this->request = $this->createMock('OCP\IRequest');
 		$this->rootFolder = $this->createMock('OCP\Files\IRootFolder');
 		$this->urlGenerator = $this->createMock('OCP\IURLGenerator');
@@ -114,6 +118,7 @@ class Share20OCSTest extends TestCase {
 			$this->shareManager,
 			$this->groupManager,
 			$this->userManager,
+			$this->notificationManager,
 			$this->request,
 			$this->rootFolder,
 			$this->urlGenerator,
@@ -137,6 +142,7 @@ class Share20OCSTest extends TestCase {
 				$this->shareManager,
 				$this->groupManager,
 				$this->userManager,
+				$this->notificationManager,
 				$this->request,
 				$this->rootFolder,
 				$this->urlGenerator,
@@ -2815,6 +2821,7 @@ class Share20OCSTest extends TestCase {
 			$this->shareManager,
 			$this->groupManager,
 			$this->userManager,
+			$this->notificationManager,
 			$this->request,
 			$this->rootFolder,
 			$this->urlGenerator,
