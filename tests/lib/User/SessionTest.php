@@ -1049,7 +1049,6 @@ class SessionTest extends TestCase {
 		$apacheBackend->expects($this->once())->method('getCurrentUserId')->willReturn('userid');
 		$loginVal = $userSession->loginWithApache($apacheBackend);
 		$this->assertFalse($loginVal);
-		
 	}
 
 
