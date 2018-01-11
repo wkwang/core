@@ -3,3 +3,6 @@ codecov:
     - drone.owncloud.com
     - !jenkins.owncloud.org
     - !travisci
+
+  fixes:
+    - "drone/src/::"
